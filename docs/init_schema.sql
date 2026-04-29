@@ -205,7 +205,39 @@ FOR EACH ROW EXECUTE FUNCTION update_movie_avg_rating();
 
 
 -- ============================================================
---  SECTION 7: SEED DATA — DỮ LIỆU MẪU ĐỂ TEST
+--  SECTION 7: BẢNG BỔ SUNG (thêm sau — không có trigger/enum)
+-- ============================================================
+
+-- Token xác thực Bearer (1 user có thể có nhiều token — đa thiết bị)
+CREATE TABLE user_tokens (
+    id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_agent TEXT,
+    created_at TIMESTAMP   NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_tokens_user ON user_tokens(user_id);
+
+COMMENT ON TABLE user_tokens IS 'Bearer token lưu DB; xóa token = đăng xuất thiết bị đó';
+
+
+-- Yêu cầu đăng ký chờ xác minh OTP (tự xóa sau khi dùng)
+CREATE TABLE register_requests (
+    id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    email             VARCHAR(255) NOT NULL,
+    confirmation_code VARCHAR(6)  NOT NULL,
+    verified          BOOLEAN     NOT NULL DEFAULT FALSE,
+    expire_at         TIMESTAMP   NOT NULL,
+    created_at        TIMESTAMP   NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_register_requests_email ON register_requests(email);
+
+COMMENT ON TABLE register_requests IS 'OTP đăng ký — expire_at = created_at + 5 phút; xóa sau khi confirm thành công';
+
+
+-- ============================================================
+--  SECTION 8: SEED DATA — DỮ LIỆU MẪU ĐỂ TEST
 -- ============================================================
 
 -- Gói subscription
