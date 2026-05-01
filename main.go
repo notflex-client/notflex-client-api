@@ -69,6 +69,7 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/registration/request", api.CreateRegistrationRequest},
 		{"POST", "/registration/verify", api.RegistrationVerify},
 		{"POST", "/registration/confirm", api.ConfirmRegistrationRequest},
+		{"GET", "/proxy/hls", api.ProxyHLS},
 		{"GET", "/genres", api.ListGenre},
 		{"GET", "/movies", api.ListMovie},
 		{"GET", "/movies/{id}", api.GetMovie},
