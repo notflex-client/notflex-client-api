@@ -96,13 +96,16 @@ COMMENT ON TABLE genres IS 'Thể loại phim: Action, Drama, Comedy, ...';
 CREATE TABLE movies (
     id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     title         VARCHAR(255)  NOT NULL,
+    type          VARCHAR(20)   NOT NULL DEFAULT 'movie',
     description   TEXT,
     poster_url    TEXT,
-    video_url     TEXT,                          -- link HLS / CDN
+    banner_url    TEXT,
+    video_url     TEXT,
     trailer_url   TEXT,
     duration_mins INT,
     release_year  SMALLINT,
-    avg_rating    NUMERIC(3,1)  NOT NULL DEFAULT 0,  -- cập nhật khi có rating mới
+    rating        VARCHAR(20),
+    avg_rating    NUMERIC(3,1)  NOT NULL DEFAULT 0,
     is_premium    BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP     NOT NULL DEFAULT NOW()
@@ -113,11 +116,36 @@ COMMENT ON COLUMN movies.video_url  IS 'URL stream thực tế (HLS .m3u8), ch�
 COMMENT ON COLUMN movies.is_premium IS 'TRUE = cần subscription, FALSE = xem miễn phí (trailer/demo)';
 
 
+CREATE TABLE tags (
+    id   SERIAL      PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    slug VARCHAR(80) UNIQUE NOT NULL
+);
+
 -- Quan hệ nhiều-nhiều: phim ↔ thể loại
 CREATE TABLE movie_genres (
     movie_id UUID REFERENCES movies(id) ON DELETE CASCADE,
     genre_id INT  REFERENCES genres(id) ON DELETE CASCADE,
     PRIMARY KEY (movie_id, genre_id)
+);
+
+CREATE TABLE movie_tags (
+    movie_id UUID REFERENCES movies(id) ON DELETE CASCADE,
+    tag_id   INT  REFERENCES tags(id) ON DELETE CASCADE,
+    PRIMARY KEY (movie_id, tag_id)
+);
+
+CREATE TABLE episodes (
+    id             UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    movie_id       UUID         NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+    season_number  INT          NOT NULL DEFAULT 1,
+    episode_number INT          NOT NULL DEFAULT 1,
+    title          VARCHAR(255) NOT NULL,
+    description    TEXT,
+    video_url      TEXT,
+    duration_mins  INT,
+    created_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 
@@ -169,9 +197,13 @@ CREATE INDEX idx_payments_user ON payments(user_id, created_at DESC);
 -- [Movie] Tìm phim theo năm, lọc premium
 CREATE INDEX idx_movies_release_year ON movies(release_year);
 CREATE INDEX idx_movies_is_premium   ON movies(is_premium);
+CREATE INDEX idx_movies_type         ON movies(type);
 
--- [Movie Genre] Lọc phim theo thể loại
+-- [Movie Genre/Tag] Lọc phim theo thể loại/tag
 CREATE INDEX idx_movie_genres_genre ON movie_genres(genre_id);
+CREATE INDEX idx_movie_tags_tag     ON movie_tags(tag_id);
+CREATE INDEX idx_tags_slug          ON tags(slug);
+CREATE INDEX idx_episodes_movie     ON episodes(movie_id, season_number, episode_number);
 
 -- [Watch History] AI service + lịch sử xem theo user
 CREATE INDEX idx_watch_history_user    ON watch_history(user_id, watched_at DESC);
@@ -249,6 +281,11 @@ INSERT INTO subscription_plans (name, price, duration_days, description) VALUES
 INSERT INTO genres (name) VALUES
     ('Action'), ('Drama'), ('Comedy'), ('Thriller'),
     ('Sci-Fi'), ('Horror'), ('Romance'), ('Animation');
+
+INSERT INTO tags (name, slug) VALUES
+    ('Trending', 'trending'), ('Top 10', 'top-10'), ('New on Netflix', 'new-on-netflix'),
+    ('Korean', 'korean'), ('Netflix Originals', 'netflix-originals'), ('Weekend', 'weekend'),
+    ('Critically Acclaimed', 'critically-acclaimed'), ('Fresh Picks', 'fresh-picks');
 
 -- Tài khoản admin mẫu (password: Admin@123 — bcrypt hash)
 INSERT INTO users (email, password_hash, full_name, role) VALUES

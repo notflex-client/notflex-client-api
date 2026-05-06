@@ -17,6 +17,7 @@ var messages = map[string]string{
 	"InvalidCredentials":          "Invalid email or password",
 	"UserNotFound":                "User not found",
 	"MovieNotFound":               "Movie not found",
+	"GenreNotFound":               "Genre not found",
 	"InvalidGenreID":              "Invalid genre ID",
 	"RegisterCodeSubject":         "Your Notflex verification code",
 }

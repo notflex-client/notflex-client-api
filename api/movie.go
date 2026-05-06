@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
 	"notflex_client_api/common/database"
 	"notflex_client_api/helpers"
 	"notflex_client_api/models"
+
+	"gorm.io/gorm"
 )
 
 func ListGenre(w http.ResponseWriter, r *http.Request) {
@@ -23,31 +26,76 @@ func ListGenre(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(genres)
 }
 
+func ListTag(w http.ResponseWriter, r *http.Request) {
+	logParams := []any{"handler", "ListTag"}
+
+	var tags []models.Tag
+	if err := database.DB.WithContext(r.Context()).Order("name").Find(&tags).Error; err != nil {
+		HandleResponseError(w, r, NewInternalServerError("listing tags", err, logParams...))
+		return
+	}
+	json.NewEncoder(w).Encode(tags)
+}
+
 func ListMovie(w http.ResponseWriter, r *http.Request) {
 	logParams := []any{"handler", "ListMovie"}
+	pageParam := strings.TrimSpace(r.URL.Query().Get("page"))
+	pageSizeParam := strings.TrimSpace(r.URL.Query().Get("pageSize"))
+	limitParam := strings.TrimSpace(r.URL.Query().Get("limit"))
+	genreIDParam := strings.TrimSpace(r.URL.Query().Get("genre_id"))
+	keywordParam := strings.TrimSpace(r.URL.Query().Get("keyword"))
+	typeParam := strings.TrimSpace(r.URL.Query().Get("type"))
+	tagParam := strings.TrimSpace(r.URL.Query().Get("tag"))
+	sortParam := strings.TrimSpace(r.URL.Query().Get("sort"))
 
-	page := helpers.StringToInt64(r.URL.Query().Get("page"), 1)
-	pageSize := int64(20)
-	offset := (page - 1) * pageSize
-
-	query := database.DB.WithContext(r.Context()).Model(&models.Movie{}).Preload("Genres")
-
-	if genreIDParam := r.URL.Query().Get("genre_id"); genreIDParam != "" {
-		query = query.Joins("JOIN movie_genres mg ON mg.movie_id = movies.id").
-			Where("mg.genre_id = ?", genreIDParam)
+	if pageParam == "" {
+		pageParam = "1"
 	}
-	if keyword := r.URL.Query().Get("keyword"); keyword != "" {
-		query = query.Where("LOWER(title) LIKE ?", "%"+keyword+"%")
+	if pageSizeParam == "" {
+		pageSizeParam = limitParam
+	}
+	page := helpers.StringToInt64(pageParam, 1)
+	pageSize := helpers.StringToInt64(pageSizeParam, 20)
+	if pageSize < 1 || pageSize > 50 {
+		HandleResponseError(w, r, NewBadRequestError("InvalidPageSize", logParams...))
+		return
 	}
 
-	var itemCount int64
-	if err := query.Count(&itemCount).Error; err != nil {
+	query := database.DB.WithContext(r.Context()).Model(&models.Movie{}).Preload("Genres").Preload("Tags")
+	if typeParam != "" {
+		query = query.Where("movies.type = ?", typeParam)
+	}
+	if genreIDParam != "" {
+		query = query.Joins("JOIN movie_genres mg ON mg.movie_id = movies.id").Where("mg.genre_id = ?", genreIDParam)
+	}
+	if tagParam != "" {
+		query = query.Joins("JOIN movie_tags mt ON mt.movie_id = movies.id").
+			Joins("JOIN tags t ON t.id = mt.tag_id").
+			Where("t.slug = ? OR LOWER(t.name) = LOWER(?)", tagParam, tagParam)
+	}
+	if keywordParam != "" {
+		query = query.Where("LOWER(movies.title) LIKE ?", "%"+strings.ToLower(keywordParam)+"%")
+	}
+
+	itemCount := int64(0)
+	err := query.Count(&itemCount).Error
+	if err != nil {
 		HandleResponseError(w, r, NewInternalServerError("counting movies", err, logParams...))
 		return
 	}
 
-	var movies []models.Movie
-	if err := query.Order("avg_rating DESC").Limit(int(pageSize)).Offset(int(offset)).Find(&movies).Error; err != nil {
+	order := "movies.avg_rating DESC"
+	switch sortParam {
+	case "new":
+		order = "movies.created_at DESC"
+	case "top", "rating":
+		order = "movies.avg_rating DESC"
+	}
+
+	offset := (page - 1) * pageSize
+	movies := make([]models.Movie, 0, pageSize)
+	err = query.Order(order).Limit(int(pageSize)).Offset(int(offset)).Find(&movies).Error
+	if err != nil {
 		HandleResponseError(w, r, NewInternalServerError("listing movies", err, logParams...))
 		return
 	}
@@ -67,15 +115,16 @@ func GetMovie(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 
 	var movie models.Movie
-	if err := database.DB.WithContext(r.Context()).Preload("Genres").Where("id = ?", idParam).First(&movie).Error; err != nil {
+	if err := database.DB.WithContext(r.Context()).
+		Preload("Genres").
+		Preload("Tags").
+		Preload("Episodes", func(db *gorm.DB) *gorm.DB {
+			return db.Order("season_number ASC, episode_number ASC")
+		}).
+		Where("id = ?", idParam).
+		First(&movie).Error; err != nil {
 		HandleResponseError(w, r, NewNotFoundError("MovieNotFound", logParams...))
 		return
-	}
-
-	// video_url chỉ trả về nếu user có role subscriber
-	user, err := helpers.GetUserFromContext(r.Context())
-	if movie.IsPremium && (err != nil || user.Role != "subscriber") {
-		movie.VideoURL = nil
 	}
 
 	json.NewEncoder(w).Encode(movie)

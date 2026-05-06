@@ -57,6 +57,8 @@ func initRouter() *chi.Mux {
 }
 
 func setupAPI(r *chi.Mux) {
+	r.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
+
 	type Route struct {
 		Method  string
 		Path    string
@@ -71,6 +73,7 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/registration/confirm", api.ConfirmRegistrationRequest},
 		{"GET", "/proxy/hls", api.ProxyHLS},
 		{"GET", "/genres", api.ListGenre},
+		{"GET", "/tags", api.ListTag},
 		{"GET", "/movies", api.ListMovie},
 		{"GET", "/movies/{id}", api.GetMovie},
 		{"GET", "/movies/genre/{genreId}", api.GetMoviesByGenre},
@@ -83,8 +86,18 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/ratings", api.CreateRating},
 	}
 
+	adminRoutes := []Route{
+		{"POST", "/admin/uploads/video", api.AdminUploadVideo},
+		{"POST", "/admin/movies", api.AdminCreateMovie},
+		{"PUT", "/admin/movies/{id}", api.AdminUpdateMovie},
+		{"DELETE", "/admin/movies/{id}", api.AdminDeleteMovie},
+	}
+
 	r.Group(func(r chi.Router) {
 		for _, route := range publicRoutes {
+			r.Method(route.Method, route.Path, route.Handler)
+		}
+		for _, route := range adminRoutes {
 			r.Method(route.Method, route.Path, route.Handler)
 		}
 	})

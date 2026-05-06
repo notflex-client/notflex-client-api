@@ -27,9 +27,11 @@ func InitDB() {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	// AutoMigrate chỉ cho các bảng mới (không có trong init_schema.sql gốc)
-	// Không ảnh hưởng đến trigger và enum đã có
 	if err := db.AutoMigrate(
+		&models.Genre{},
+		&models.Tag{},
+		&models.Movie{},
+		&models.Episode{},
 		&models.UserToken{},
 		&models.RegisterRequest{},
 		&models.WatchHistory{},
@@ -37,8 +39,30 @@ func InitDB() {
 		log.Fatalf("auto migrate failed: %v", err)
 	}
 
+	seedTags(db)
+
 	DB = db
 	slog.Info("connected to PostgreSQL")
+}
+
+func seedTags(db *gorm.DB) {
+	tags := []models.Tag{
+		{Name: "Trending", Slug: "trending"},
+		{Name: "Top 10", Slug: "top-10"},
+		{Name: "New on Netflix", Slug: "new-on-netflix"},
+		{Name: "Korean", Slug: "korean"},
+		{Name: "Netflix Originals", Slug: "netflix-originals"},
+		{Name: "Weekend", Slug: "weekend"},
+		{Name: "Critically Acclaimed", Slug: "critically-acclaimed"},
+		{Name: "Fresh Picks", Slug: "fresh-picks"},
+		{Name: "Animation", Slug: "animation"},
+		{Name: "Action", Slug: "action"},
+		{Name: "Romance", Slug: "romance"},
+	}
+
+	for _, tag := range tags {
+		db.FirstOrCreate(&tag, models.Tag{Slug: tag.Slug})
+	}
 }
 
 func CloseDB() {
