@@ -20,6 +20,8 @@ var messages = map[string]string{
 	"GenreNotFound":               "Genre not found",
 	"InvalidGenreID":              "Invalid genre ID",
 	"RegisterCodeSubject":         "Your Notflex verification code",
+	"LoginCodeSubject":            "Your Notflex sign-in code",
+	"LoginRequestNotFound":        "Login request not found",
 }
 
 func Translate(_ context.Context, tag string) string {

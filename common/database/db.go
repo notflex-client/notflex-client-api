@@ -39,6 +39,7 @@ func InitDB() {
 		&models.Payment{},
 		&models.WatchHistory{},
 		&models.MovieRating{},
+		&models.LoginRequest{},
 	); err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
 	}
