@@ -34,12 +34,17 @@ func InitDB() {
 		&models.Episode{},
 		&models.UserToken{},
 		&models.RegisterRequest{},
+		&models.SubscriptionPlan{},
+		&models.UserSubscription{},
+		&models.Payment{},
 		&models.WatchHistory{},
+		&models.MovieRating{},
 	); err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
 	}
 
 	seedTags(db)
+	seedSubscriptionPlans(db)
 
 	DB = db
 	slog.Info("connected to PostgreSQL")
@@ -62,6 +67,19 @@ func seedTags(db *gorm.DB) {
 
 	for _, tag := range tags {
 		db.FirstOrCreate(&tag, models.Tag{Slug: tag.Slug})
+	}
+}
+
+func seedSubscriptionPlans(db *gorm.DB) {
+	descMonthly := "Xem phim premium không giới hạn trong 30 ngày"
+	descAnnual := "Gói năm tiết kiệm cho người xem thường xuyên"
+	plans := []models.SubscriptionPlan{
+		{Name: "Monthly", Price: 79000, DurationDays: 30, Description: &descMonthly, IsActive: true},
+		{Name: "Annual", Price: 699000, DurationDays: 365, Description: &descAnnual, IsActive: true},
+	}
+
+	for _, plan := range plans {
+		db.Where(models.SubscriptionPlan{Name: plan.Name}).FirstOrCreate(&plan)
 	}
 }
 

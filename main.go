@@ -77,10 +77,15 @@ func setupAPI(r *chi.Mux) {
 		{"GET", "/movies", api.ListMovie},
 		{"GET", "/movies/{id}", api.GetMovie},
 		{"GET", "/movies/genre/{genreId}", api.GetMoviesByGenre},
+		{"GET", "/subscription/plans", api.ListSubscriptionPlans},
 	}
 
 	privateRoutes := []Route{
 		{"GET", "/auth/me", api.GetProfile},
+		{"GET", "/subscription/me", api.GetMySubscription},
+		{"POST", "/subscription/checkout", api.CheckoutSubscription},
+		{"GET", "/payments", api.ListPayments},
+		{"GET", "/recommendations", api.ListRecommendations},
 		{"POST", "/watch-history", api.CreateWatchHistory},
 		{"GET", "/watch-history", api.ListWatchHistory},
 		{"POST", "/ratings", api.CreateRating},
@@ -97,14 +102,19 @@ func setupAPI(r *chi.Mux) {
 		for _, route := range publicRoutes {
 			r.Method(route.Method, route.Path, route.Handler)
 		}
-		for _, route := range adminRoutes {
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(middlewares.Authentication)
+		for _, route := range privateRoutes {
 			r.Method(route.Method, route.Path, route.Handler)
 		}
 	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(middlewares.Authentication)
-		for _, route := range privateRoutes {
+		r.Use(middlewares.RequireRole("admin"))
+		for _, route := range adminRoutes {
 			r.Method(route.Method, route.Path, route.Handler)
 		}
 	})

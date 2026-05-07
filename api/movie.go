@@ -127,6 +127,15 @@ func GetMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if movie.IsPremium {
+		user, ok := userFromBearerToken(r)
+		if !ok {
+			movie.VideoURL = nil
+		} else if _, hasSubscription, err := findActiveSubscription(r, user.ID); err != nil || !hasSubscription {
+			movie.VideoURL = nil
+		}
+	}
+
 	json.NewEncoder(w).Encode(movie)
 }
 
