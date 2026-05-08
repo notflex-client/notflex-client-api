@@ -22,6 +22,8 @@ var messages = map[string]string{
 	"RegisterCodeSubject":         "Your Notflex verification code",
 	"LoginCodeSubject":            "Your Notflex sign-in code",
 	"LoginRequestNotFound":        "Login request not found",
+	"PasswordMismatch":            "Passwords do not match",
+	"WrongOldPassword":            "Current password is incorrect",
 }
 
 func Translate(_ context.Context, tag string) string {

@@ -84,6 +84,7 @@ func setupAPI(r *chi.Mux) {
 
 	privateRoutes := []Route{
 		{"GET", "/auth/me", api.GetProfile},
+		{"POST", "/auth/change-password", api.ChangePassword},
 		{"GET", "/subscription/me", api.GetMySubscription},
 		{"POST", "/subscription/checkout", api.CheckoutSubscription},
 		{"GET", "/payments", api.ListPayments},
@@ -91,6 +92,7 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/watch-history", api.CreateWatchHistory},
 		{"GET", "/watch-history", api.ListWatchHistory},
 		{"POST", "/ratings", api.CreateRating},
+		{"POST", "/profile/transfer", api.TransferProfile},
 	}
 
 	adminRoutes := []Route{
