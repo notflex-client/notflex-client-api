@@ -57,3 +57,51 @@ func AdminUploadVideo(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]string{"url": "/uploads/videos/" + fileName})
 }
+
+func AdminUploadImage(w http.ResponseWriter, r *http.Request) {
+	logParams := []any{"handler", "AdminUploadImage"}
+
+	err := r.ParseMultipartForm(20 << 20)
+	if err != nil {
+		HandleResponseError(w, r, NewBadRequestError("InvalidMultipartForm", logParams...))
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		HandleResponseError(w, r, NewBadRequestError("MissingFile", logParams...))
+		return
+	}
+	defer file.Close()
+
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	allowed := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".webp": true, ".gif": true}
+	if !allowed[ext] {
+		HandleResponseError(w, r, NewBadRequestError("UnsupportedImageType", logParams...))
+		return
+	}
+
+	uploadDir := filepath.Join("uploads", "images")
+	err = os.MkdirAll(uploadDir, 0o755)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("create upload directory", err, logParams...))
+		return
+	}
+
+	fileName := uuid.NewString() + ext
+	filePath := filepath.Join(uploadDir, fileName)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("create image file", err, logParams...))
+		return
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, file)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("save image file", err, logParams...))
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"url": "/uploads/images/" + fileName})
+}

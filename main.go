@@ -85,6 +85,7 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/auth/forgot-password", api.ForgotPassword},
 		{"GET", "/auth/forgot-password/token/{token}", api.GetForgotPasswordToken},
 		{"POST", "/auth/forgot-password/reset", api.ResetPassword},
+		{"GET", "/banners", api.ListBanner},
 	}
 
 	privateRoutes := []Route{
@@ -106,6 +107,7 @@ func setupAPI(r *chi.Mux) {
 
 	adminRoutes := []Route{
 		{"POST", "/admin/uploads/video", api.AdminUploadVideo},
+		{"POST", "/admin/uploads/image", api.AdminUploadImage},
 		{"POST", "/admin/movies", api.AdminCreateMovie},
 		{"PUT", "/admin/movies/{id}", api.AdminUpdateMovie},
 		{"DELETE", "/admin/movies/{id}", api.AdminDeleteMovie},
@@ -113,6 +115,25 @@ func setupAPI(r *chi.Mux) {
 		{"DELETE", "/admin/subtitles/{id}", api.AdminDeleteSubtitle},
 		{"POST", "/admin/movies/{movieId}/audio-tracks", api.AdminCreateAudioTrack},
 		{"DELETE", "/admin/audio-tracks/{id}", api.AdminDeleteAudioTrack},
+		{"POST", "/admin/tags", api.AdminCreateTag},
+		{"PUT", "/admin/tags/{id}", api.AdminUpdateTag},
+		{"DELETE", "/admin/tags/{id}", api.AdminDeleteTag},
+		{"GET", "/admin/subscription-plans", api.AdminListSubscriptionPlan},
+		{"POST", "/admin/subscription-plans", api.AdminCreateSubscriptionPlan},
+		{"PUT", "/admin/subscription-plans/{id}", api.AdminUpdateSubscriptionPlan},
+		{"DELETE", "/admin/subscription-plans/{id}", api.AdminDeleteSubscriptionPlan},
+		{"GET", "/admin/banners", api.AdminListBanner},
+		{"POST", "/admin/banners", api.AdminCreateBanner},
+		{"PUT", "/admin/banners/{id}", api.AdminUpdateBanner},
+		{"DELETE", "/admin/banners/{id}", api.AdminDeleteBanner},
+		{"GET", "/admin/payments", api.AdminListPayment},
+		{"GET", "/admin/users", api.AdminListUser},
+		{"PUT", "/admin/users/{id}", api.AdminUpdateUser},
+		{"DELETE", "/admin/users/{id}", api.AdminDeleteUser},
+		{"POST", "/admin/genres", api.AdminCreateGenre},
+		{"PUT", "/admin/genres/{id}", api.AdminUpdateGenre},
+		{"DELETE", "/admin/genres/{id}", api.AdminDeleteGenre},
+		{"GET", "/admin/stats", api.AdminGetStats},
 	}
 
 	r.Group(func(r chi.Router) {
