@@ -43,6 +43,7 @@ func InitDB() {
 		&models.Favorite{},
 		&models.Subtitle{},
 		&models.AudioTrack{},
+		&models.Banner{},
 	); err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
 	}

@@ -30,6 +30,12 @@ var messages = map[string]string{
 	"LoginCodeSubject":             "Your Notflex sign-in code",
 	"LoginRequestNotFound":         "Login request not found",
 	"InvalidPageSize":              "Invalid page size",
+	"TagNotFound":                  "Tag not found",
+	"TagSlugExisted":               "Tag slug already exists",
+	"PlanNotFound":                 "Subscription plan not found",
+	"BannerNotFound":               "Banner not found",
+	"CannotDeleteSelf":             "You cannot delete your own account",
+	"GenreNameExisted":             "Genre name already exists",
 }
 
 func Translate(_ context.Context, tag string) string {
