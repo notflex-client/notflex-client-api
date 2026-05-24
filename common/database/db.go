@@ -34,6 +34,7 @@ func InitDB() {
 		&models.Episode{},
 		&models.UserToken{},
 		&models.RegisterRequest{},
+		&models.LoginRequest{},
 		&models.SubscriptionPlan{},
 		&models.UserSubscription{},
 		&models.Payment{},

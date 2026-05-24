@@ -125,6 +125,9 @@ func userFromBearerToken(r *http.Request) (models.User, bool) {
 	if err := database.DB.WithContext(r.Context()).Where("id = ?", tokenID).First(&token).Error; err != nil {
 		return models.User{}, false
 	}
+	if !token.ExpireAt.IsZero() && time.Now().After(token.ExpireAt) {
+		return models.User{}, false
+	}
 
 	var user models.User
 	if err := database.DB.WithContext(r.Context()).Where("id = ? AND is_active = TRUE", token.UserID).First(&user).Error; err != nil {

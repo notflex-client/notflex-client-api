@@ -11,6 +11,7 @@ type UserToken struct {
 	ID        string    `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID    string    `gorm:"type:uuid;not null;index" json:"user_id"`
 	UserAgent string    `gorm:"type:text" json:"user_agent"`
+	ExpireAt  time.Time `json:"expire_at"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

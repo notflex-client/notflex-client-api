@@ -5,4 +5,5 @@ type contextKey int
 const (
 	ContextKeyLocale contextKey = 1
 	ContextKeyUser   contextKey = 2
+	ContextKeyToken  contextKey = 3
 )

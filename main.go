@@ -68,6 +68,8 @@ func setupAPI(r *chi.Mux) {
 	publicRoutes := []Route{
 		{"GET", "/health", api.HealthCheck},
 		{"POST", "/auth/login", api.Login},
+		{"POST", "/auth/login-code", api.CreateLoginCodeRequest},
+		{"POST", "/auth/login-code/confirm", api.ConfirmLoginCode},
 		{"POST", "/registration/request", api.CreateRegistrationRequest},
 		{"POST", "/registration/verify", api.RegistrationVerify},
 		{"POST", "/registration/confirm", api.ConfirmRegistrationRequest},
@@ -78,10 +80,16 @@ func setupAPI(r *chi.Mux) {
 		{"GET", "/movies/{id}", api.GetMovie},
 		{"GET", "/movies/genre/{genreId}", api.GetMoviesByGenre},
 		{"GET", "/subscription/plans", api.ListSubscriptionPlans},
+		{"POST", "/auth/forgot-password", api.ForgotPassword},
+		{"GET", "/auth/forgot-password/token/{token}", api.GetForgotPasswordToken},
+		{"POST", "/auth/forgot-password/reset", api.ResetPassword},
 	}
 
 	privateRoutes := []Route{
 		{"GET", "/auth/me", api.GetProfile},
+		{"PUT", "/auth/me", api.UpdateProfile},
+		{"POST", "/auth/change-password", api.ChangePassword},
+		{"DELETE", "/auth/logout", api.Logout},
 		{"GET", "/subscription/me", api.GetMySubscription},
 		{"POST", "/subscription/checkout", api.CheckoutSubscription},
 		{"GET", "/payments", api.ListPayments},

@@ -168,7 +168,7 @@ func ConfirmRegistrationRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := models.UserToken{UserID: user.ID, UserAgent: r.UserAgent()}
+	token := models.UserToken{UserID: user.ID, UserAgent: r.UserAgent(), ExpireAt: time.Now().Add(30 * 24 * time.Hour)}
 	if err := database.DB.WithContext(r.Context()).Create(&token).Error; err != nil {
 		HandleResponseError(w, r, NewInternalServerError("creating user token", err, logParams...))
 		return

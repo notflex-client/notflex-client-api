@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"notflex_client_api/api"
 	"notflex_client_api/common/database"
@@ -13,13 +14,14 @@ import (
 
 func Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, ok := UserFromBearerToken(r)
+		user, tokenID, ok := UserFromBearerToken(r)
 		if !ok {
 			api.HandleResponseError(w, r, api.NewUnauthorizedError())
 			return
 		}
 
 		ctx := context.WithValue(r.Context(), enum.ContextKeyUser, user)
+		ctx = context.WithValue(ctx, enum.ContextKeyToken, tokenID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -41,28 +43,32 @@ func RequireRole(roles ...string) func(http.Handler) http.Handler {
 	}
 }
 
-func UserFromBearerToken(r *http.Request) (models.User, bool) {
+func UserFromBearerToken(r *http.Request) (models.User, string, bool) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		return models.User{}, false
+		return models.User{}, "", false
 	}
 
 	tokenID := strings.TrimPrefix(authHeader, "Bearer ")
 	if tokenID == authHeader {
-		return models.User{}, false
+		return models.User{}, "", false
 	}
 
 	var token models.UserToken
 	if err := database.DB.WithContext(r.Context()).Where("id = ?", tokenID).First(&token).Error; err != nil {
-		return models.User{}, false
+		return models.User{}, "", false
+	}
+	if !token.ExpireAt.IsZero() && time.Now().After(token.ExpireAt) {
+		database.DB.WithContext(r.Context()).Delete(&token)
+		return models.User{}, "", false
 	}
 
 	var user models.User
 	if err := database.DB.WithContext(r.Context()).
 		Where("id = ? AND is_active = TRUE", token.UserID).
 		First(&user).Error; err != nil {
-		return models.User{}, false
+		return models.User{}, "", false
 	}
 
-	return user, true
+	return user, token.ID, true
 }

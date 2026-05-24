@@ -19,7 +19,16 @@ var messages = map[string]string{
 	"MovieNotFound":               "Movie not found",
 	"GenreNotFound":               "Genre not found",
 	"InvalidGenreID":              "Invalid genre ID",
-	"RegisterCodeSubject":         "Your Notflex verification code",
+	"RegisterCodeSubject":          "Your Notflex verification code",
+	"AccountNotFound":              "No account found with this email address",
+	"ResetPasswordEmailSubject":    "Reset your Notflex password",
+	"InvalidResetToken":            "This reset link is invalid or has already been used",
+	"ExpiredResetToken":            "This reset link has expired. Please request a new one",
+	"AccountLocked":                "Too many failed login attempts. Your account is locked for 15 minutes.",
+	"WrongCurrentPassword":         "Current password is incorrect",
+	"SamePassword":                 "New password must be different from the current password",
+	"LoginCodeSubject":             "Your Notflex sign-in code",
+	"LoginRequestNotFound":         "Login request not found",
 }
 
 func Translate(_ context.Context, tag string) string {
