@@ -121,6 +121,8 @@ func GetMovie(w http.ResponseWriter, r *http.Request) {
 		Preload("Episodes", func(db *gorm.DB) *gorm.DB {
 			return db.Order("season_number ASC, episode_number ASC")
 		}).
+		Preload("Subtitles").
+		Preload("AudioTracks").
 		Where("id = ?", idParam).
 		First(&movie).Error; err != nil {
 		HandleResponseError(w, r, NewNotFoundError("MovieNotFound", logParams...))

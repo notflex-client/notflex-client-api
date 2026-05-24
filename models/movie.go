@@ -29,9 +29,11 @@ type Movie struct {
 	IsPremium    bool      `gorm:"default:true" json:"is_premium"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
-	Genres       []Genre   `gorm:"many2many:movie_genres;" json:"genres,omitempty"`
-	Tags         []Tag     `gorm:"many2many:movie_tags;" json:"tags,omitempty"`
-	Episodes     []Episode `gorm:"foreignKey:MovieID" json:"episodes,omitempty"`
+	Genres       []Genre      `gorm:"many2many:movie_genres;" json:"genres,omitempty"`
+	Tags         []Tag        `gorm:"many2many:movie_tags;" json:"tags,omitempty"`
+	Episodes     []Episode    `gorm:"foreignKey:MovieID" json:"episodes,omitempty"`
+	Subtitles    []Subtitle   `gorm:"foreignKey:MovieID" json:"subtitles,omitempty"`
+	AudioTracks  []AudioTrack `gorm:"foreignKey:MovieID" json:"audio_tracks,omitempty"`
 }
 
 type Episode struct {
