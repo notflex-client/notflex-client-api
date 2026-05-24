@@ -29,6 +29,7 @@ var messages = map[string]string{
 	"SamePassword":                 "New password must be different from the current password",
 	"LoginCodeSubject":             "Your Notflex sign-in code",
 	"LoginRequestNotFound":         "Login request not found",
+	"InvalidPageSize":              "Invalid page size",
 }
 
 func Translate(_ context.Context, tag string) string {

@@ -73,13 +73,13 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/registration/request", api.CreateRegistrationRequest},
 		{"POST", "/registration/verify", api.RegistrationVerify},
 		{"POST", "/registration/confirm", api.ConfirmRegistrationRequest},
-		{"POST", "/auth/login-request", api.LoginOtpRequest},
-		{"POST", "/auth/login-verify", api.LoginOtpVerify},
 		{"GET", "/proxy/hls", api.ProxyHLS},
 		{"GET", "/genres", api.ListGenre},
 		{"GET", "/tags", api.ListTag},
 		{"GET", "/movies", api.ListMovie},
 		{"GET", "/movies/{id}", api.GetMovie},
+		{"GET", "/movies/{movieId}/subtitles", api.ListSubtitleByMovie},
+		{"GET", "/movies/{movieId}/audio-tracks", api.ListAudioTrackByMovie},
 		{"GET", "/movies/genre/{genreId}", api.GetMoviesByGenre},
 		{"GET", "/subscription/plans", api.ListSubscriptionPlans},
 		{"POST", "/auth/forgot-password", api.ForgotPassword},
@@ -99,7 +99,9 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/watch-history", api.CreateWatchHistory},
 		{"GET", "/watch-history", api.ListWatchHistory},
 		{"POST", "/ratings", api.CreateRating},
-		{"POST", "/profile/transfer", api.TransferProfile},
+		{"GET", "/favorites", api.ListFavorite},
+		{"POST", "/favorites/{movieId}", api.CreateFavorite},
+		{"DELETE", "/favorites/{movieId}", api.DeleteFavorite},
 	}
 
 	adminRoutes := []Route{
@@ -107,6 +109,10 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/admin/movies", api.AdminCreateMovie},
 		{"PUT", "/admin/movies/{id}", api.AdminUpdateMovie},
 		{"DELETE", "/admin/movies/{id}", api.AdminDeleteMovie},
+		{"POST", "/admin/movies/{movieId}/subtitles", api.AdminCreateSubtitle},
+		{"DELETE", "/admin/subtitles/{id}", api.AdminDeleteSubtitle},
+		{"POST", "/admin/movies/{movieId}/audio-tracks", api.AdminCreateAudioTrack},
+		{"DELETE", "/admin/audio-tracks/{id}", api.AdminDeleteAudioTrack},
 	}
 
 	r.Group(func(r chi.Router) {
