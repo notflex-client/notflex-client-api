@@ -73,6 +73,8 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/registration/request", api.CreateRegistrationRequest},
 		{"POST", "/registration/verify", api.RegistrationVerify},
 		{"POST", "/registration/confirm", api.ConfirmRegistrationRequest},
+		{"POST", "/auth/login-request", api.LoginOtpRequest},
+		{"POST", "/auth/login-verify", api.LoginOtpVerify},
 		{"GET", "/proxy/hls", api.ProxyHLS},
 		{"GET", "/genres", api.ListGenre},
 		{"GET", "/tags", api.ListTag},
@@ -97,6 +99,7 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/watch-history", api.CreateWatchHistory},
 		{"GET", "/watch-history", api.ListWatchHistory},
 		{"POST", "/ratings", api.CreateRating},
+		{"POST", "/profile/transfer", api.TransferProfile},
 	}
 
 	adminRoutes := []Route{
