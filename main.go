@@ -32,6 +32,7 @@ func main() {
 	slog.Info("starting", "app", "notflex_client_api", "port", os.Getenv("PORT"))
 
 	database.InitDB()
+	api.InitStripe()
 	r := initRouter()
 	setupAPI(r)
 	startServer(r)
@@ -85,6 +86,7 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/auth/forgot-password", api.ForgotPassword},
 		{"GET", "/auth/forgot-password/token/{token}", api.GetForgotPasswordToken},
 		{"POST", "/auth/forgot-password/reset", api.ResetPassword},
+		{"POST", "/webhooks/stripe", api.StripeWebhook},
 		{"GET", "/banners", api.ListBanner},
 	}
 
@@ -95,8 +97,11 @@ func setupAPI(r *chi.Mux) {
 		{"DELETE", "/auth/logout", api.Logout},
 		{"GET", "/subscription/me", api.GetMySubscription},
 		{"POST", "/subscription/checkout", api.CheckoutSubscription},
+		{"POST", "/subscription/stripe-checkout", api.CreateStripeCheckout},
+		{"POST", "/subscription/stripe-verify", api.VerifyStripeSession},
 		{"GET", "/payments", api.ListPayments},
 		{"GET", "/recommendations", api.ListRecommendations},
+		{"GET", "/recommendations/me", api.GetMyRecommendations},
 		{"POST", "/watch-history", api.CreateWatchHistory},
 		{"GET", "/watch-history", api.ListWatchHistory},
 		{"POST", "/ratings", api.CreateRating},
@@ -108,6 +113,7 @@ func setupAPI(r *chi.Mux) {
 	adminRoutes := []Route{
 		{"POST", "/admin/uploads/video", api.AdminUploadVideo},
 		{"POST", "/admin/uploads/image", api.AdminUploadImage},
+		{"POST", "/admin/uploads/image", api.AdminUploadImage},
 		{"POST", "/admin/movies", api.AdminCreateMovie},
 		{"PUT", "/admin/movies/{id}", api.AdminUpdateMovie},
 		{"DELETE", "/admin/movies/{id}", api.AdminDeleteMovie},
@@ -118,6 +124,9 @@ func setupAPI(r *chi.Mux) {
 		{"POST", "/admin/tags", api.AdminCreateTag},
 		{"PUT", "/admin/tags/{id}", api.AdminUpdateTag},
 		{"DELETE", "/admin/tags/{id}", api.AdminDeleteTag},
+		{"POST", "/admin/genres", api.AdminCreateGenre},
+		{"PUT", "/admin/genres/{id}", api.AdminUpdateGenre},
+		{"DELETE", "/admin/genres/{id}", api.AdminDeleteGenre},
 		{"GET", "/admin/subscription-plans", api.AdminListSubscriptionPlan},
 		{"POST", "/admin/subscription-plans", api.AdminCreateSubscriptionPlan},
 		{"PUT", "/admin/subscription-plans/{id}", api.AdminUpdateSubscriptionPlan},
@@ -130,9 +139,6 @@ func setupAPI(r *chi.Mux) {
 		{"GET", "/admin/users", api.AdminListUser},
 		{"PUT", "/admin/users/{id}", api.AdminUpdateUser},
 		{"DELETE", "/admin/users/{id}", api.AdminDeleteUser},
-		{"POST", "/admin/genres", api.AdminCreateGenre},
-		{"PUT", "/admin/genres/{id}", api.AdminUpdateGenre},
-		{"DELETE", "/admin/genres/{id}", api.AdminDeleteGenre},
 		{"GET", "/admin/stats", api.AdminGetStats},
 	}
 

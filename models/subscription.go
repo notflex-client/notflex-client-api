@@ -39,15 +39,18 @@ func (s *UserSubscription) BeforeCreate(_ *gorm.DB) error {
 }
 
 type Payment struct {
-	ID             string            `gorm:"type:uuid;primaryKey" json:"id"`
-	UserID         string            `gorm:"type:uuid;not null;index" json:"user_id"`
-	SubscriptionID *string           `gorm:"type:uuid;index" json:"subscription_id"`
-	Subscription   *UserSubscription `gorm:"foreignKey:SubscriptionID" json:"subscription,omitempty"`
-	Amount         float64           `gorm:"type:numeric(10,2);not null" json:"amount"`
-	PaymentMethod  string            `gorm:"type:varchar(50)" json:"payment_method"`
-	Status         string            `gorm:"type:varchar(20);not null;default:'pending'" json:"status"`
-	TransactionID  string            `gorm:"type:varchar(255)" json:"transaction_id"`
-	CreatedAt      time.Time         `json:"created_at"`
+	ID                    string            `gorm:"type:uuid;primaryKey" json:"id"`
+	UserID                string            `gorm:"type:uuid;not null;index" json:"user_id"`
+	SubscriptionID        *string           `gorm:"type:uuid;index" json:"subscription_id"`
+	Subscription          *UserSubscription `gorm:"foreignKey:SubscriptionID" json:"subscription,omitempty"`
+	PlanID                int               `gorm:"index" json:"plan_id"`
+	Amount                float64           `gorm:"type:numeric(10,2);not null" json:"amount"`
+	PaymentMethod         string            `gorm:"type:varchar(50)" json:"payment_method"`
+	Status                string            `gorm:"type:varchar(20);not null;default:'pending'" json:"status"`
+	TransactionID         string            `gorm:"type:varchar(255)" json:"transaction_id"`
+	StripeSessionID       string            `gorm:"type:varchar(255);index" json:"stripe_session_id"`
+	StripePaymentIntentID string            `gorm:"type:varchar(255);index" json:"stripe_payment_intent_id"`
+	CreatedAt             time.Time         `json:"created_at"`
 }
 
 func (p *Payment) BeforeCreate(_ *gorm.DB) error {

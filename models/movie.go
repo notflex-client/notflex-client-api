@@ -30,6 +30,7 @@ type Movie struct {
 	DurationMins *int      `json:"duration_mins"`
 	ReleaseYear  *int16    `json:"release_year"`
 	Rating       *string   `gorm:"type:varchar(20)" json:"rating"`
+	Language     *string   `gorm:"type:varchar(20);index" json:"language"`
 	AvgRating    float64   `gorm:"type:numeric(3,1);default:0" json:"avg_rating"`
 	IsPremium    bool      `gorm:"default:true" json:"is_premium"`
 	CreatedAt    time.Time `json:"created_at"`

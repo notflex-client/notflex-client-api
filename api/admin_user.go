@@ -45,11 +45,7 @@ func AdminListUser(w http.ResponseWriter, r *http.Request) {
 
 	offset := (page - 1) * pageSize
 	users := make([]models.User, 0, pageSize)
-	err = query.
-		Order("created_at DESC").
-		Limit(int(pageSize)).
-		Offset(int(offset)).
-		Find(&users).Error
+	err = query.Order("created_at DESC").Limit(int(pageSize)).Offset(int(offset)).Find(&users).Error
 	if err != nil {
 		HandleResponseError(w, r, NewInternalServerError("listing users", err, logParams...))
 		return
@@ -68,7 +64,6 @@ func AdminUpdateUser(w http.ResponseWriter, r *http.Request) {
 	logParams := []any{"handler", "AdminUpdateUser"}
 
 	idParam := chi.URLParam(r, "id")
-	logParams = append(logParams, "id", idParam)
 
 	var body struct {
 		FullName  string  `json:"full_name" validate:"max=100"`
@@ -125,7 +120,6 @@ func AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	logParams := []any{"handler", "AdminDeleteUser"}
 
 	idParam := chi.URLParam(r, "id")
-	logParams = append(logParams, "id", idParam)
 
 	currentUser, err := helpers.GetUserFromContext(r.Context())
 	if err != nil {

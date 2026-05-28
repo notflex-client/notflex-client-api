@@ -64,7 +64,6 @@ func AdminUpdateGenre(w http.ResponseWriter, r *http.Request) {
 		HandleResponseError(w, r, NewBadRequestError("InvalidID", logParams...))
 		return
 	}
-	logParams = append(logParams, "id", id)
 
 	var body struct {
 		Name string `json:"name" validate:"required,max=50"`
@@ -119,7 +118,6 @@ func AdminDeleteGenre(w http.ResponseWriter, r *http.Request) {
 		HandleResponseError(w, r, NewBadRequestError("InvalidID", logParams...))
 		return
 	}
-	logParams = append(logParams, "id", id)
 
 	database.DB.WithContext(r.Context()).Exec("DELETE FROM movie_genres WHERE genre_id = ?", id)
 

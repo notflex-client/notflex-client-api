@@ -72,7 +72,6 @@ func AdminUpdateSubscriptionPlan(w http.ResponseWriter, r *http.Request) {
 		HandleResponseError(w, r, NewBadRequestError("InvalidID", logParams...))
 		return
 	}
-	logParams = append(logParams, "id", id)
 
 	var body struct {
 		Name         string  `json:"name" validate:"required,max=50"`
@@ -122,7 +121,6 @@ func AdminDeleteSubscriptionPlan(w http.ResponseWriter, r *http.Request) {
 		HandleResponseError(w, r, NewBadRequestError("InvalidID", logParams...))
 		return
 	}
-	logParams = append(logParams, "id", id)
 
 	err = database.DB.WithContext(r.Context()).Where("id = ?", id).Delete(&models.SubscriptionPlan{}).Error
 	if err != nil {

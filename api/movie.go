@@ -46,6 +46,7 @@ func ListMovie(w http.ResponseWriter, r *http.Request) {
 	keywordParam := strings.TrimSpace(r.URL.Query().Get("keyword"))
 	typeParam := strings.TrimSpace(r.URL.Query().Get("type"))
 	tagParam := strings.TrimSpace(r.URL.Query().Get("tag"))
+	languageParam := strings.TrimSpace(r.URL.Query().Get("language"))
 	sortParam := strings.TrimSpace(r.URL.Query().Get("sort"))
 
 	if pageParam == "" {
@@ -75,6 +76,9 @@ func ListMovie(w http.ResponseWriter, r *http.Request) {
 	}
 	if keywordParam != "" {
 		query = query.Where("LOWER(movies.title) LIKE ?", "%"+strings.ToLower(keywordParam)+"%")
+	}
+	if languageParam != "" {
+		query = query.Where("movies.language = ?", languageParam)
 	}
 
 	itemCount := int64(0)
