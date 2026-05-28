@@ -1,6 +1,11 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type Genre struct {
 	ID   int    `gorm:"primaryKey" json:"id"`
@@ -35,6 +40,27 @@ type Movie struct {
 	Episodes     []Episode    `gorm:"foreignKey:MovieID" json:"episodes,omitempty"`
 	Subtitles    []Subtitle   `gorm:"foreignKey:MovieID" json:"subtitles,omitempty"`
 	AudioTracks  []AudioTrack `gorm:"foreignKey:MovieID" json:"audio_tracks,omitempty"`
+}
+
+func (m *Movie) BeforeCreate(_ *gorm.DB) error {
+	if m.ID == "" {
+		m.ID = uuid.NewString()
+	}
+	return nil
+}
+
+func (e *Episode) BeforeCreate(_ *gorm.DB) error {
+	if e.ID == "" {
+		e.ID = uuid.NewString()
+	}
+	return nil
+}
+
+func (w *WatchHistory) BeforeCreate(_ *gorm.DB) error {
+	if w.ID == "" {
+		w.ID = uuid.NewString()
+	}
+	return nil
 }
 
 type Episode struct {

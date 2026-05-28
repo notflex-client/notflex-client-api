@@ -113,6 +113,7 @@ func setupAPI(r *chi.Mux) {
 	adminRoutes := []Route{
 		{"POST", "/admin/uploads/video", api.AdminUploadVideo},
 		{"POST", "/admin/uploads/image", api.AdminUploadImage},
+		{"POST", "/admin/uploads/image", api.AdminUploadImage},
 		{"POST", "/admin/movies", api.AdminCreateMovie},
 		{"PUT", "/admin/movies/{id}", api.AdminUpdateMovie},
 		{"DELETE", "/admin/movies/{id}", api.AdminDeleteMovie},
