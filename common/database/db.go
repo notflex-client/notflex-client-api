@@ -32,6 +32,7 @@ func InitDB() {
 		&models.Tag{},
 		&models.Movie{},
 		&models.Episode{},
+		&models.User{},
 		&models.UserToken{},
 		&models.RegisterRequest{},
 		&models.LoginRequest{},
