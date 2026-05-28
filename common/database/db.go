@@ -45,6 +45,8 @@ func InitDB() {
 		&models.Subtitle{},
 		&models.AudioTrack{},
 		&models.Banner{},
+		&models.ProfileTransfer{},
+		&models.MovieSimilarity{},
 	); err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
 	}
