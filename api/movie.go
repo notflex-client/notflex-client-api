@@ -134,11 +134,18 @@ func GetMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if movie.IsPremium {
+		noAccess := true
 		user, ok := userFromBearerToken(r)
-		if !ok {
+		if ok {
+			if _, hasSubscription, err := findActiveSubscription(r, user.ID); err == nil && hasSubscription {
+				noAccess = false
+			}
+		}
+		if noAccess {
 			movie.VideoURL = nil
-		} else if _, hasSubscription, err := findActiveSubscription(r, user.ID); err != nil || !hasSubscription {
-			movie.VideoURL = nil
+			for i := range movie.Episodes {
+				movie.Episodes[i].VideoURL = nil
+			}
 		}
 	}
 

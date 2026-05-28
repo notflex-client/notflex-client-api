@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -14,12 +15,15 @@ import (
 func ListBanner(w http.ResponseWriter, r *http.Request) {
 	logParams := []any{"handler", "ListBanner"}
 
+	pageParam := strings.TrimSpace(r.URL.Query().Get("page"))
+
+	query := database.DB.WithContext(r.Context()).Where("is_active = TRUE")
+	if pageParam != "" {
+		query = query.Where("page = ?", pageParam)
+	}
+
 	banners := make([]models.Banner, 0)
-	err := database.DB.WithContext(r.Context()).
-		Where("is_active = TRUE").
-		Preload("Movie").
-		Order("position ASC, created_at DESC").
-		Find(&banners).Error
+	err := query.Preload("Movie").Order("position ASC, created_at DESC").Find(&banners).Error
 	if err != nil {
 		HandleResponseError(w, r, NewInternalServerError("listing banners", err, logParams...))
 		return
@@ -53,6 +57,7 @@ func AdminCreateBanner(w http.ResponseWriter, r *http.Request) {
 		Description string  `json:"description" validate:"max=2000"`
 		ImageURL    string  `json:"image_url" validate:"required,max=1000"`
 		LinkURL     string  `json:"link_url" validate:"max=1000"`
+		Page        string  `json:"page" validate:"max=50"`
 		Position    int     `json:"position"`
 		IsActive    bool    `json:"is_active"`
 	}
@@ -67,12 +72,17 @@ func AdminCreateBanner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if body.Page == "" {
+		body.Page = "browse"
+	}
+
 	banner := models.Banner{
 		MovieID:     body.MovieID,
 		Title:       body.Title,
 		Description: body.Description,
 		ImageURL:    body.ImageURL,
 		LinkURL:     body.LinkURL,
+		Page:        body.Page,
 		Position:    body.Position,
 		IsActive:    body.IsActive,
 	}
@@ -98,6 +108,7 @@ func AdminUpdateBanner(w http.ResponseWriter, r *http.Request) {
 		Description string  `json:"description" validate:"max=2000"`
 		ImageURL    string  `json:"image_url" validate:"required,max=1000"`
 		LinkURL     string  `json:"link_url" validate:"max=1000"`
+		Page        string  `json:"page" validate:"max=50"`
 		Position    int     `json:"position"`
 		IsActive    bool    `json:"is_active"`
 	}
@@ -112,6 +123,10 @@ func AdminUpdateBanner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if body.Page == "" {
+		body.Page = "browse"
+	}
+
 	var banner models.Banner
 	err = database.DB.WithContext(r.Context()).Where("id = ?", idParam).First(&banner).Error
 	if err != nil {
@@ -124,6 +139,7 @@ func AdminUpdateBanner(w http.ResponseWriter, r *http.Request) {
 	banner.Description = body.Description
 	banner.ImageURL = body.ImageURL
 	banner.LinkURL = body.LinkURL
+	banner.Page = body.Page
 	banner.Position = body.Position
 	banner.IsActive = body.IsActive
 	err = database.DB.WithContext(r.Context()).Save(&banner).Error
