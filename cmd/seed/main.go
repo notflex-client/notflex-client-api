@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("connect DB: %v", err)
 	}
 
-	// â”€â”€ Genres â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Genres ───────────────────────────────────────────────────────────────
 	genres := []models.Genre{
 		{Name: "Action"},
 		{Name: "Drama"},
@@ -43,9 +43,30 @@ func main() {
 	for i := range genres {
 		db.Where(models.Genre{Name: genres[i].Name}).FirstOrCreate(&genres[i])
 	}
-	fmt.Println("âœ“ Genres seeded")
+	fmt.Println("✓ Genres seeded")
 
-	// â”€â”€ Movies / Series â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Tags ─────────────────────────────────────────────────────────────────
+	tags := []models.Tag{
+		{Name: "Action-Packed", Slug: "action-packed"},
+		{Name: "Critically Acclaimed", Slug: "critically-acclaimed"},
+		{Name: "Must Watch", Slug: "must-watch"},
+		{Name: "Dark & Thrilling", Slug: "dark"},
+		{Name: "Korean", Slug: "korean"},
+		{Name: "Watch One Weekend", Slug: "weekend"},
+		{Name: "Family", Slug: "family"},
+		{Name: "Fresh Picks", Slug: "fresh-picks"},
+	}
+	for i := range tags {
+		db.Where(models.Tag{Slug: tags[i].Slug}).FirstOrCreate(&tags[i])
+	}
+	fmt.Println("✓ Tags seeded")
+
+	tagBySlug := map[string]models.Tag{}
+	for _, t := range tags {
+		tagBySlug[t.Slug] = t
+	}
+
+	// ── Movies / Series ───────────────────────────────────────────────────────
 	ptr := func(s string) *string { return &s }
 	ptrI := func(n int16) *int16 { return &n }
 	ptrInt := func(n int) *int { return &n }
@@ -53,6 +74,7 @@ func main() {
 	titles := []struct {
 		movie    models.Movie
 		genreIDs []int
+		tagSlugs []string
 	}{
 		{
 			movie: models.Movie{
@@ -66,7 +88,8 @@ func main() {
 				DurationMins: nil,
 				IsPremium:    true,
 			},
-			genreIDs: []int{1, 2, 3}, // Action, Drama, Thriller
+			genreIDs: []int{1, 2, 3},
+			tagSlugs: []string{"action-packed", "dark", "must-watch", "fresh-picks"},
 		},
 		{
 			movie: models.Movie{
@@ -80,7 +103,8 @@ func main() {
 				DurationMins: ptrInt(148),
 				IsPremium:    true,
 			},
-			genreIDs: []int{1, 5, 3}, // Action, Sci-Fi, Thriller
+			genreIDs: []int{1, 5, 3},
+			tagSlugs: []string{"action-packed", "critically-acclaimed", "must-watch", "weekend"},
 		},
 		{
 			movie: models.Movie{
@@ -94,7 +118,8 @@ func main() {
 				DurationMins: ptrInt(152),
 				IsPremium:    true,
 			},
-			genreIDs: []int{1, 10, 3}, // Action, Crime, Thriller
+			genreIDs: []int{1, 10, 3},
+			tagSlugs: []string{"action-packed", "critically-acclaimed", "must-watch", "dark", "weekend"},
 		},
 		{
 			movie: models.Movie{
@@ -108,7 +133,8 @@ func main() {
 				DurationMins: ptrInt(169),
 				IsPremium:    true,
 			},
-			genreIDs: []int{2, 5}, // Drama, Sci-Fi
+			genreIDs: []int{2, 5},
+			tagSlugs: []string{"critically-acclaimed", "must-watch", "weekend"},
 		},
 		{
 			movie: models.Movie{
@@ -122,7 +148,8 @@ func main() {
 				DurationMins: nil,
 				IsPremium:    true,
 			},
-			genreIDs: []int{2, 10, 3}, // Drama, Crime, Thriller
+			genreIDs: []int{2, 10, 3},
+			tagSlugs: []string{"dark", "must-watch", "korean", "critically-acclaimed"},
 		},
 		{
 			movie: models.Movie{
@@ -136,16 +163,27 @@ func main() {
 				DurationMins: nil,
 				IsPremium:    false,
 			},
-			genreIDs: []int{4, 8}, // Comedy, Horror
+			genreIDs: []int{4, 8},
+			tagSlugs: []string{"dark", "family", "fresh-picks", "weekend"},
 		},
 	}
 
 	for i := range titles {
 		m := &titles[i].movie
-		// Chá»‰ insert náº¿u chÆ°a tá»“n táº¡i
 		var existing models.Movie
 		if db.Where("title = ?", m.Title).First(&existing).Error == nil {
-			fmt.Printf("  skip (exists): %s\n", m.Title)
+			var gs []models.Genre
+			db.Where("id IN ?", titles[i].genreIDs).Find(&gs)
+			db.Model(&existing).Association("Genres").Replace(gs)
+
+			var ts []models.Tag
+			for _, slug := range titles[i].tagSlugs {
+				if t, ok := tagBySlug[slug]; ok {
+					ts = append(ts, t)
+				}
+			}
+			db.Model(&existing).Association("Tags").Replace(ts)
+			fmt.Printf("  skip (exists, genres+tags updated): %s\n", m.Title)
 			continue
 		}
 		m.ID = uuid.NewString()
@@ -153,13 +191,20 @@ func main() {
 			log.Printf("  error inserting %s: %v", m.Title, err)
 			continue
 		}
-		// GÃ¡n genres
 		var gs []models.Genre
 		db.Where("id IN ?", titles[i].genreIDs).Find(&gs)
 		db.Model(m).Association("Genres").Replace(gs)
-		fmt.Printf("  âœ“ %s\n", m.Title)
+
+		var ts []models.Tag
+		for _, slug := range titles[i].tagSlugs {
+			if t, ok := tagBySlug[slug]; ok {
+				ts = append(ts, t)
+			}
+		}
+		db.Model(m).Association("Tags").Replace(ts)
+		fmt.Printf("  ✓ %s\n", m.Title)
 	}
 
-	fmt.Println("âœ“ Movies seeded")
+	fmt.Println("✓ Movies seeded")
 	fmt.Println("\nSeed completed!")
 }

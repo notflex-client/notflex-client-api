@@ -15,6 +15,7 @@ type Banner struct {
 	Description string    `gorm:"type:text" json:"description"`
 	ImageURL    string    `gorm:"type:text;not null" json:"image_url"`
 	LinkURL     string    `gorm:"type:text" json:"link_url"`
+	Page        string    `gorm:"type:varchar(50);not null;default:'browse'" json:"page"`
 	Position    int       `gorm:"not null;default:0" json:"position"`
 	IsActive    bool      `gorm:"not null;default:true" json:"is_active"`
 	CreatedAt   time.Time `json:"created_at"`
