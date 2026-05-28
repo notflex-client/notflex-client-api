@@ -23,6 +23,7 @@ type MovieInput struct {
 	DurationMins *int    `json:"duration_mins"`
 	ReleaseYear  *int16  `json:"release_year"`
 	Rating       *string `json:"rating"`
+	Language     *string `json:"language"`
 	IsPremium    bool    `json:"is_premium"`
 	GenreIDs     []int   `json:"genre_ids"`
 	TagIDs       []int   `json:"tag_ids"`
@@ -55,6 +56,7 @@ func AdminCreateMovie(w http.ResponseWriter, r *http.Request) {
 		DurationMins: input.DurationMins,
 		ReleaseYear:  input.ReleaseYear,
 		Rating:       input.Rating,
+		Language:     input.Language,
 		IsPremium:    input.IsPremium,
 	}
 	if err := database.DB.WithContext(r.Context()).Create(&movie).Error; err != nil {
@@ -100,6 +102,7 @@ func AdminUpdateMovie(w http.ResponseWriter, r *http.Request) {
 	movie.DurationMins = input.DurationMins
 	movie.ReleaseYear = input.ReleaseYear
 	movie.Rating = input.Rating
+	movie.Language = input.Language
 	movie.IsPremium = input.IsPremium
 
 	if err := database.DB.WithContext(r.Context()).Save(&movie).Error; err != nil {
