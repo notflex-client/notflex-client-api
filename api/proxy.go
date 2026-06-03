@@ -113,7 +113,7 @@ func rewriteM3U8(content, manifestURL string, r *http.Request) string {
 	baseDir := parsed.Scheme + "://" + parsed.Host + path.Dir(parsed.Path) + "/"
 
 	scheme := "http"
-	if r.TLS != nil {
+	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
 		scheme = "https"
 	}
 	proxyBase := scheme + "://" + r.Host + "/proxy/hls?url="
