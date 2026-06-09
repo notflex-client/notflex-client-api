@@ -22,6 +22,12 @@ func ListFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 	logParams = append(logParams, "userID", user.ID)
 
+	profileID, err := resolveProfileID(r, &user)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("resolving profile", err, logParams...))
+		return
+	}
+
 	pageParam := r.URL.Query().Get("page")
 	pageSizeParam := r.URL.Query().Get("pageSize")
 	page := helpers.StringToInt64(pageParam, 1)
@@ -33,7 +39,7 @@ func ListFavorite(w http.ResponseWriter, r *http.Request) {
 
 	query := database.DB.WithContext(r.Context()).
 		Model(&models.Favorite{}).
-		Where("user_id = ?", user.ID)
+		Where("profile_id = ?", profileID)
 
 	itemCount := int64(0)
 	err = query.Count(&itemCount).Error
@@ -75,6 +81,12 @@ func CreateFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 	logParams = append(logParams, "userID", user.ID)
 
+	profileID, err := resolveProfileID(r, &user)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("resolving profile", err, logParams...))
+		return
+	}
+
 	movieIDParam := chi.URLParam(r, "movieId")
 	logParams = append(logParams, "movieID", movieIDParam)
 
@@ -85,9 +97,9 @@ func CreateFavorite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	favorite := models.Favorite{UserID: user.ID, MovieID: movieIDParam}
+	favorite := models.Favorite{ProfileID: profileID, MovieID: movieIDParam, UserID: user.ID}
 	err = database.DB.WithContext(r.Context()).
-		Where("user_id = ? AND movie_id = ?", user.ID, movieIDParam).
+		Where("profile_id = ? AND movie_id = ?", profileID, movieIDParam).
 		First(&models.Favorite{}).Error
 	if err == nil {
 		json.NewEncoder(w).Encode(favorite)
@@ -118,11 +130,17 @@ func DeleteFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 	logParams = append(logParams, "userID", user.ID)
 
+	profileID, err := resolveProfileID(r, &user)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("resolving profile", err, logParams...))
+		return
+	}
+
 	movieIDParam := chi.URLParam(r, "movieId")
 	logParams = append(logParams, "movieID", movieIDParam)
 
 	err = database.DB.WithContext(r.Context()).
-		Where("user_id = ? AND movie_id = ?", user.ID, movieIDParam).
+		Where("profile_id = ? AND movie_id = ?", profileID, movieIDParam).
 		Delete(&models.Favorite{}).Error
 	if err != nil {
 		HandleResponseError(w, r, NewInternalServerError("deleting favorite", err, logParams...))

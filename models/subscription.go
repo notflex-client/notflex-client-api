@@ -13,6 +13,7 @@ type SubscriptionPlan struct {
 	Price        float64   `gorm:"type:numeric(10,2);not null" json:"price"`
 	DurationDays int       `gorm:"not null" json:"duration_days"`
 	Description  *string   `gorm:"type:text" json:"description"`
+	MaxProfiles  int       `gorm:"not null;default:1" json:"max_profiles"`
 	IsActive     bool      `gorm:"default:true" json:"is_active"`
 	CreatedAt    time.Time `json:"created_at"`
 }

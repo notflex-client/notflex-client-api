@@ -13,12 +13,18 @@ func ListRecommendations(w http.ResponseWriter, r *http.Request) {
 	user, _ := helpers.GetUserFromContext(r.Context())
 	logParams := []any{"handler", "ListRecommendations", "userID", user.ID}
 
+	profileID, err := resolveProfileID(r, &user)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("resolving profile", err, logParams...))
+		return
+	}
+
 	movies := make([]models.Movie, 0, 12)
 	query := database.DB.WithContext(r.Context()).Model(&models.Movie{}).Preload("Genres").Preload("Tags")
 
 	var watchedMovieIDs []string
 	database.DB.WithContext(r.Context()).Model(&models.WatchHistory{}).
-		Where("user_id = ?", user.ID).
+		Where("profile_id = ?", profileID).
 		Pluck("movie_id", &watchedMovieIDs)
 
 	if len(watchedMovieIDs) > 0 {

@@ -79,6 +79,7 @@ type Episode struct {
 type WatchHistory struct {
 	ID            string    `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID        string    `gorm:"type:uuid;not null;index" json:"user_id"`
+	ProfileID     string    `gorm:"type:uuid;index" json:"profile_id"`
 	MovieID       string    `gorm:"type:uuid;not null;index" json:"movie_id"`
 	Movie         *Movie    `gorm:"foreignKey:MovieID" json:"movie,omitempty"`
 	WatchedAt     time.Time `gorm:"not null;default:now()" json:"watched_at"`
@@ -87,8 +88,9 @@ type WatchHistory struct {
 }
 
 type MovieRating struct {
-	UserID  string    `gorm:"type:uuid;primaryKey" json:"user_id"`
-	MovieID string    `gorm:"type:uuid;primaryKey" json:"movie_id"`
-	Rating  int       `gorm:"type:smallint;not null" json:"rating"`
-	RatedAt time.Time `gorm:"not null;default:now()" json:"rated_at"`
+	ProfileID string    `gorm:"type:uuid;primaryKey" json:"profile_id"`
+	MovieID   string    `gorm:"type:uuid;primaryKey" json:"movie_id"`
+	UserID    string    `gorm:"type:uuid;not null;index" json:"user_id"`
+	Rating    int       `gorm:"type:smallint;not null" json:"rating"`
+	RatedAt   time.Time `gorm:"not null;default:now()" json:"rated_at"`
 }

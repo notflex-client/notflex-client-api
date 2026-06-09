@@ -184,6 +184,12 @@ func CreateWatchHistory(w http.ResponseWriter, r *http.Request) {
 	user, _ := helpers.GetUserFromContext(r.Context())
 	logParams := []any{"handler", "CreateWatchHistory", "userID", user.ID}
 
+	profileID, err := resolveProfileID(r, &user)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("resolving profile", err, logParams...))
+		return
+	}
+
 	var body struct {
 		MovieID       string `json:"movieId" validate:"required"`
 		WatchDuration int    `json:"watchDuration"`
@@ -200,6 +206,7 @@ func CreateWatchHistory(w http.ResponseWriter, r *http.Request) {
 
 	history := models.WatchHistory{
 		UserID:        user.ID,
+		ProfileID:     profileID,
 		MovieID:       body.MovieID,
 		WatchDuration: body.WatchDuration,
 		IsCompleted:   body.IsCompleted,
@@ -217,9 +224,15 @@ func ListWatchHistory(w http.ResponseWriter, r *http.Request) {
 	user, _ := helpers.GetUserFromContext(r.Context())
 	logParams := []any{"handler", "ListWatchHistory", "userID", user.ID}
 
+	profileID, err := resolveProfileID(r, &user)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("resolving profile", err, logParams...))
+		return
+	}
+
 	var history []models.WatchHistory
 	if err := database.DB.WithContext(r.Context()).
-		Where("user_id = ?", user.ID).
+		Where("profile_id = ?", profileID).
 		Preload("Movie").
 		Order("watched_at DESC").
 		Find(&history).Error; err != nil {
@@ -234,6 +247,12 @@ func CreateRating(w http.ResponseWriter, r *http.Request) {
 	user, _ := helpers.GetUserFromContext(r.Context())
 	logParams := []any{"handler", "CreateRating", "userID", user.ID}
 
+	profileID, err := resolveProfileID(r, &user)
+	if err != nil {
+		HandleResponseError(w, r, NewInternalServerError("resolving profile", err, logParams...))
+		return
+	}
+
 	var body struct {
 		MovieID string `json:"movieId" validate:"required"`
 		Rating  int    `json:"rating" validate:"required,min=1,max=5"`
@@ -247,10 +266,10 @@ func CreateRating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rating := models.MovieRating{UserID: user.ID, MovieID: body.MovieID, Rating: body.Rating}
-	err := database.DB.WithContext(r.Context()).
-		Where(models.MovieRating{UserID: user.ID, MovieID: body.MovieID}).
-		Assign(models.MovieRating{Rating: body.Rating}).
+	rating := models.MovieRating{ProfileID: profileID, MovieID: body.MovieID, UserID: user.ID, Rating: body.Rating}
+	err = database.DB.WithContext(r.Context()).
+		Where(models.MovieRating{ProfileID: profileID, MovieID: body.MovieID}).
+		Assign(models.MovieRating{Rating: body.Rating, UserID: user.ID}).
 		FirstOrCreate(&rating).Error
 	if err != nil {
 		HandleResponseError(w, r, NewInternalServerError("upserting rating", err, logParams...))

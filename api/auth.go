@@ -83,6 +83,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_ = ensureProfiles(r.Context(), &user)
 	user.PasswordHash = ""
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{"token": token.ID, "user": user})
@@ -200,6 +201,7 @@ func ConfirmLoginCode(w http.ResponseWriter, r *http.Request) {
 
 	database.DB.WithContext(r.Context()).Delete(&request)
 
+	_ = ensureProfiles(r.Context(), &user)
 	user.PasswordHash = ""
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{"token": token.ID, "user": user})

@@ -50,7 +50,7 @@ func initRouter() *chi.Mux {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Cache-Control"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Cache-Control", "X-Profile-Id"},
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
@@ -94,6 +94,11 @@ func setupAPI(r *chi.Mux) {
 	privateRoutes := []Route{
 		{"GET", "/auth/me", api.GetProfile},
 		{"PUT", "/auth/me", api.UpdateProfile},
+		{"GET", "/profiles", api.ListProfiles},
+		{"POST", "/profiles", api.CreateProfile},
+		{"PUT", "/profiles/{id}", api.UpdateUserProfile},
+		{"DELETE", "/profiles/{id}", api.DeleteUserProfile},
+		{"POST", "/profile/transfer", api.TransferProfile},
 		{"POST", "/auth/change-password", api.ChangePassword},
 		{"DELETE", "/auth/logout", api.Logout},
 		{"GET", "/subscription/me", api.GetMySubscription},

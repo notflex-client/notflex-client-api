@@ -176,6 +176,7 @@ func ConfirmRegistrationRequest(w http.ResponseWriter, r *http.Request) {
 
 	database.DB.WithContext(r.Context()).Delete(&request)
 
+	_ = ensureProfiles(r.Context(), &user)
 	user.PasswordHash = ""
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{"token": token.ID, "user": user})

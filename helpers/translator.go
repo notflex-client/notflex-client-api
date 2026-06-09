@@ -41,6 +41,13 @@ var messages = map[string]string{
 	"UnsupportedImageType":         "Unsupported image type",
 	"InvalidMultipartForm":         "Invalid multipart form",
 	"MissingFile":                  "File is required",
+	"ProfileNotFound":              "Profile not found",
+	"MaxProfilesReached":           "You have reached the maximum number of profiles",
+	"CannotDeleteLastProfile":      "You cannot delete your last profile",
+	"CannotTransferLastProfile":    "You cannot transfer your last profile",
+	"TargetUserNotFound":           "No account found with this email address",
+	"CannotTransferToSelf":         "You cannot transfer a profile to your own account",
+	"TargetMaxProfilesReached":     "The target account has reached its profile limit",
 }
 
 func Translate(_ context.Context, tag string) string {

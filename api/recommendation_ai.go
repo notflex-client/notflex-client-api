@@ -37,7 +37,13 @@ func GetMyRecommendations(w http.ResponseWriter, r *http.Request) {
 	user, _ := helpers.GetUserFromContext(r.Context())
 	logParams := []any{"handler", "GetMyRecommendations", "userID", user.ID}
 
-	if cached, ok := loadCache(user.ID); ok {
+	profileID, perr := resolveProfileID(r, &user)
+	if perr != nil {
+		HandleResponseError(w, r, NewInternalServerError("resolving profile", perr, logParams...))
+		return
+	}
+
+	if cached, ok := loadCache(profileID); ok {
 		json.NewEncoder(w).Encode(map[string]any{
 			"items":  cached.items,
 			"source": cached.source,
@@ -46,19 +52,19 @@ func GetMyRecommendations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	watched, ratings := loadUserHistory(r.Context(), user.ID)
+	watched, ratings := loadUserHistory(r.Context(), profileID)
 
 	if len(watched) == 0 && len(ratings) == 0 {
 		items, source := fallbackTrending(r.Context())
-		storeCache(user.ID, items, source)
+		storeCache(profileID, items, source)
 		json.NewEncoder(w).Encode(map[string]any{"items": items, "source": source})
 		return
 	}
 
-	candidates := buildCandidatePool(r.Context(), user.ID, watched)
+	candidates := buildCandidatePool(r.Context(), profileID, watched)
 	if len(candidates) == 0 {
 		items, source := fallbackTrending(r.Context())
-		storeCache(user.ID, items, source)
+		storeCache(profileID, items, source)
 		json.NewEncoder(w).Encode(map[string]any{"items": items, "source": source})
 		return
 	}
@@ -95,12 +101,12 @@ func GetMyRecommendations(w http.ResponseWriter, r *http.Request) {
 
 	if len(final) == 0 {
 		items, source := ruleBasedRecommendation(candidates)
-		storeCache(user.ID, items, source)
+		storeCache(profileID, items, source)
 		json.NewEncoder(w).Encode(map[string]any{"items": items, "source": source})
 		return
 	}
 
-	storeCache(user.ID, final, "ai-gemini")
+	storeCache(profileID, final, "ai-gemini")
 	json.NewEncoder(w).Encode(map[string]any{"items": final, "source": "ai-gemini"})
 }
 
@@ -124,10 +130,10 @@ func mockLLMRanker(candidates []models.Movie) []llmRankedItem {
 	return ranked
 }
 
-func loadUserHistory(ctx context.Context, userID string) ([]models.Movie, map[string]int) {
+func loadUserHistory(ctx context.Context, profileID string) ([]models.Movie, map[string]int) {
 	var history []models.WatchHistory
 	database.DB.WithContext(ctx).
-		Where("user_id = ?", userID).
+		Where("profile_id = ?", profileID).
 		Preload("Movie.Genres").
 		Order("watched_at DESC").
 		Limit(20).
@@ -142,7 +148,7 @@ func loadUserHistory(ctx context.Context, userID string) ([]models.Movie, map[st
 
 	var ratingRows []models.MovieRating
 	database.DB.WithContext(ctx).
-		Where("user_id = ?", userID).
+		Where("profile_id = ?", profileID).
 		Find(&ratingRows)
 	ratings := make(map[string]int, len(ratingRows))
 	for _, r := range ratingRows {

@@ -21,6 +21,7 @@ type User struct {
 	LockedUntil        *time.Time `gorm:"default:null" json:"-"`
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at"`
+	Profiles           []Profile  `gorm:"foreignKey:UserID" json:"profiles,omitempty"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
