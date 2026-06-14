@@ -72,6 +72,16 @@ func ProxyHLS(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	// Fail fast on upstream errors. Otherwise an error page (e.g. an HTML 404
+	// from an IP-blocked CDN) whose URL ends in ".m3u8" would be mistaken for a
+	// playlist and rewritten line-by-line, spamming the player with bogus
+	// "segment" requests instead of failing cleanly.
+	if resp.StatusCode >= 400 {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		http.Error(w, fmt.Sprintf("upstream returned %d", resp.StatusCode), http.StatusBadGateway)
+		return
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		http.Error(w, "read error", http.StatusInternalServerError)
@@ -81,7 +91,9 @@ func ProxyHLS(w http.ResponseWriter, r *http.Request) {
 	content := string(body)
 	contentType := resp.Header.Get("Content-Type")
 
-	if isM3U8(rawURL, contentType, content) {
+	// A real HLS manifest always begins with #EXTM3U — the authoritative signal.
+	// Don't trust the ".m3u8" URL suffix alone (error pages share that suffix).
+	if strings.HasPrefix(strings.TrimSpace(content), "#EXTM3U") {
 		content = rewriteM3U8(content, rawURL, r)
 		contentType = "application/vnd.apple.mpegurl"
 	} else if contentType == "" {
@@ -93,16 +105,6 @@ func ProxyHLS(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(resp.StatusCode)
 	w.Write([]byte(content))
-}
-
-func isM3U8(rawURL, contentType, body string) bool {
-	if strings.Contains(contentType, "mpegurl") {
-		return true
-	}
-	if strings.HasSuffix(strings.Split(rawURL, "?")[0], ".m3u8") {
-		return true
-	}
-	return strings.HasPrefix(strings.TrimSpace(body), "#EXTM3U")
 }
 
 func rewriteM3U8(content, manifestURL string, r *http.Request) string {
